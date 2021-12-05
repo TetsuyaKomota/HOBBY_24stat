@@ -145,16 +145,19 @@ def main(event, context):
     """
     pubsub_message     = base64.b64decode(event['data']).decode('utf-8')
     print(pubsub_message)
-    begin_idx, end_idx = pubsub_message.split("-")
-    begin_idx          = int(begin_idx)
-    end_idx            = int(end_idx) if len(end_idx) > 0 else None
+    data               = pubsub_message.split("-")
+    begin_idx          = int(data[0])
+    end_idx            = int(data[1]) if len(end_idx) > 0 else None
+    for_local          = (len(data) >= 2 and data[2]=="local")
 
     # API KEY や対象のチャンネルIDリストを取得
     conf = load_config()
     conf = load_secret(conf)
 
-    # client = gcs.Client()
-    client = gcs.Client.from_service_account_json(conf["gcp"]["credentials_path"])
+    if for_local:
+        client = gcs.Client.from_service_account_json(conf["gcp"]["credentials_path"])
+    else:
+        client = gcs.Client()
     bucket = client.bucket(conf["gcp"]["bucket"])
 
     with tempfile.TemporaryDirectory() as tempdir:
@@ -234,4 +237,4 @@ def main(event, context):
     return "OK"
 
 if __name__ == "__main__":
-    main({"data": base64.b64encode(b"0-10")}, None)
+    main({"data": base64.b64encode(b"0-10-local")}, None)
