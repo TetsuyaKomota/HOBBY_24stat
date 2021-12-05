@@ -15,4 +15,5 @@ steps:
        - '--trigger-topic=pick-statistics-scheduler-topic'
        - '--runtime=python38'
        - '--entry-point=main'
+       - '--timeout=540'
   dir: 'pick_statistics/'
