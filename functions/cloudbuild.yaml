@@ -7,5 +7,12 @@ steps:
   args: [-c, 'pip install -r requirements.txt']
   dir: 'pick_statistics/'
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['functions', 'deploy', 'pick-statistics-cicd', '--trigger-topic=pick-statistics-scheduler-topic', '--runtime', 'python38', '--entry-point', 'main']
+  args:
+       - 'functions' 
+       - 'deploy'
+       - '--region=asia-northeast1'
+       - 'pick-statistics-cicd'
+       - '--trigger-topic=pick-statistics-scheduler-topic'
+       - '--runtime=python38'
+       - '--entry-point=main'
   dir: 'pick_statistics/'
