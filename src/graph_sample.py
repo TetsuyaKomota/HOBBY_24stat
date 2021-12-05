@@ -10,12 +10,11 @@ def calc(N, E):
     for i in range(len(N)):
         f = np.zeros(2)
         for j, e in enumerate(E[i]):
-            if e > 0:
-                # 隣接する点とは，結合力の逆数の距離になるように力が働く
-                v = N[j] - N[i]                 # ベクトル i->j
-                d = np.linalg.norm(v) - (1/e)   # 目的地までの距離
-                r = E[j][j]/(E[i][i] + E[j][j]) # 質量比
-                f = f + v*d*r
+            # 隣接する点とは，結合力の逆数の距離になるように力が働く
+            v = N[j] - N[i]                       # ベクトル i->j
+            d = np.linalg.norm(v) - (1/max(e, 0.1)) # 目的地までの距離
+            r = E[j][j]/(E[i][i] + E[j][j])       # 質量比
+            f = f + v*min(d*r, 1)
         F.append(f)
 
     return [N[i] + F[i] for i in range(len(N))]
@@ -65,6 +64,7 @@ E = [
 E = np.random.randint(-10, 10, [len(S), len(S)])
 E = np.tril(E) + np.tril(E, k=-1).T
 E = E * (E > 0)
+E = E + np.eye(len(S))
 print(E)
 
 if __name__ == "__main__":

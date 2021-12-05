@@ -189,7 +189,7 @@ def main(event, context):
             # GCS上のファイルをダウンロード
             blob = bucket.get_blob(SEP.join(["subscriber_count_dir", f"{channel_id}.tsv"]))
             if blob is not None:
-                blob.download_to_filename(os.path.join(tempdir, conf[dir_name], file_name))
+                blob.download_to_filename(os.path.join(tempdir, conf["subscriber_count_dir"], f"{channel_id}.tsv"))
                 print("download:", SEP.join(["subscriber_count_dir", f"{channel_id}.tsv"]))
 
             # 取得済みの統計情報を取得
