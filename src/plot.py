@@ -6,6 +6,7 @@ import re
 import time
 import yaml
 import numpy as np
+import warnings
 from datetime import datetime
 from pyti.triangular_moving_average import triangular_moving_average
 
@@ -22,7 +23,7 @@ def tma(data, l):
     d = list(triangular_moving_average(data, l))
     return d[l:-l]
 
-def plot(data, label, video_name=None, B=5):
+def plot(df, data, label, video_name=None, B=5):
     l = max(len(data)//40, 1)
     tma1 = tma(data, l)
     tma2 = tma(data, 2*l)
@@ -51,6 +52,32 @@ def load_config():
         conf = yaml.safe_load(f.read())
     return conf
 
+
+def make_figure(conf, df):
+    plt.figure(figsize=(20, 15))
+
+    for i, l in enumerate(labels):
+        plt.subplot(len(labels), 2, 2*i+1)
+        plot(df, df[l], labels[l], list(df.video_name))
+        
+        if l == "view":
+            continue
+        plt.subplot(len(labels), 2, 2*i+2)
+        plot(df, df[l] / df["view"], labels[l] + "/視聴回数")
+        # plot(df, df[l] / df["view"], labels[l] + "/視聴回数", list(df.video_name))
+
+    plt.subplot(4, 2, 2)
+    plot(df, df.dislike / (df.like + df.dislike), "低評価率")
+
+    title = re.sub("/", "／", df.iloc[0].channel_name)
+    title = re.sub(r"\\", "", title)
+    title = re.sub("\*", "", title)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        plt.savefig(os.path.join(conf["plot_dir"], f"{title}.png"), bbox_inches='tight', pad_inches=0.5)
+    plt.close()
+
 if __name__ == "__main__":
 
     # API KEY や対象のチャンネルIDリストを取得
@@ -58,38 +85,26 @@ if __name__ == "__main__":
 
     os.makedirs(conf["plot_dir"], exist_ok=True)
 
-    
+    total_df = pd.DataFrame()    
     for channel_id in conf["channel_id_list"]:
         print("execute ", channel_id)
 
-        df = pd.read_csv(f"tmp/statistics/{channel_id}.tsv", sep="\t")
+        df       = pd.read_csv(f"tmp/statistics/{channel_id}.tsv", sep="\t")
+        total_df = pd.concat([total_df, df], sort=True)
 
+        # 投稿数10未満のチャンネルはスキップ
         if len(df) < 10:
             print("continue...")
             continue
 
-        plt.figure(figsize=(20, 15))
+        make_figure(conf, df)
 
-        for i, l in enumerate(labels):
-            plt.subplot(len(labels), 2, 2*i+1)
-            plot(df[l], labels[l], list(df.video_name))
-            
-            if l == "view":
-                continue
-            plt.subplot(len(labels), 2, 2*i+2)
-            plot(df[l] / df["view"], labels[l] + "/視聴回数")
-            # plot(df[l] / df["view"], labels[l] + "/視聴回数", list(df.video_name))
+    # 全チャンネルの総合推移を集計
+    total_df.publish_time = total_df.publish_time.apply(lambda x:x.split(" ")[0])
 
+    total_df = total_df.groupby("publish_time")[["view", "like", "dislike", "comment"]].apply(sum).reset_index()
+    total_df["video_name"] = total_df.publish_time
+    total_df["channel_name"] = "トータル"
+    total_df.publish_time = total_df.publish_time.apply(lambda x: f"{x} 00:00:00")
 
-        plt.subplot(4, 2, 2)
-        plot(df.dislike / (df.like + df.dislike), "低評価率")
-
-        # plt.subplot(4, 2, 1)
-        # plt.title(df.iloc[0].channel_name, fontsize=18)
-
-        # plt.savefig(os.path.join(conf["plot_dir"], f"{channel_id}.png"), bbox_inches='tight', pad_inches=0)
-        title = re.sub("/", "／", df.iloc[0].channel_name)
-        title = re.sub(r"\\", "", title)
-        title = re.sub("\*", "", title)
-        plt.savefig(os.path.join(conf["plot_dir"], f"{title}.png"), bbox_inches='tight', pad_inches=0.5)
-        plt.close()
+    make_figure(conf, total_df)
