@@ -77,6 +77,7 @@ def get_video_id_list(conf, playlist_id, wait_time=0.1):
 # アップロード動画IDのリストから以下のDataFrameを取得する
 # - video_id:     動画ID
 # - video_name:   動画タイトル
+# - description:  動画概要欄
 # - publish_time: 投稿日時
 # - view:         視聴回数
 # - like:         高評価回数
@@ -107,6 +108,7 @@ def get_video_list(conf, video_id_list):
             video = {}
             video["video_id"]     = item["id"]
             video["video_name"]   = item["snippet"]["title"]
+            video["description"]  = item["snippet"]["description"]
             video["publish_time"] = datetime.strptime(item["snippet"]["publishedAt"], "%Y-%m-%dT%H:%M:%SZ")
             video["view"]         = item["statistics"].get("viewCount", 0)
             video["like"]         = item["statistics"].get("likeCount", 0)
@@ -208,6 +210,7 @@ def main(event, context):
                         "subscriber_count",
                         "video_id",
                         "video_name",
+                        "description", 
                         "publish_time",
                         "view",
                         "like",
