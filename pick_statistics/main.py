@@ -167,6 +167,7 @@ def main(event, context):
         os.makedirs(os.path.join(tempdir, conf["statistics_dir"]))
         os.makedirs(os.path.join(tempdir, conf["subscriber_count_dir"]))
 
+        """
         # GCS上のファイルをダウンロード
         for path in client.list_blobs(conf["gcp"]["bucket"]):
             if len(path.name.split(SEP)) != 2:
@@ -177,12 +178,20 @@ def main(event, context):
             blob = bucket.get_blob(path.name)
             blob.download_to_filename(os.path.join(tempdir, conf[dir_name], file_name))
             print("download: ", path.name, dir_name, file_name)
+        """
 
         current_date = datetime.now()
 
         # 全ての対象チャンネルに対して実行
         for channel_id in conf["channel_id_list"][begin_idx:end_idx]:
             print("execute ", channel_id)
+
+            # GCS上のファイルをダウンロード
+            blob = bucket.get_blob(SEP.join(["subscriber_count_dir", f"{channel_id}.tsv"]))
+            if blob is not None:
+                blob.download_to_filename(os.path.join(tempdir, conf[dir_name], file_name))
+                print("download:", SEP.join(["subscriber_count_dir", f"{channel_id}.tsv"]))
+
             # 取得済みの統計情報を取得
             if os.path.exists(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv")):
                 df = pd.read_csv(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv"), sep="\t")
