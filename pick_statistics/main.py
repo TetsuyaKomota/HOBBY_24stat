@@ -147,8 +147,8 @@ def main(event, context):
     print(pubsub_message)
     data               = pubsub_message.split("-")
     begin_idx          = int(data[0])
-    end_idx            = int(data[1]) if len(data) >= 1 and len(data[1]) > 0 else None
-    for_local          = (len(data) >= 2 and data[2]=="local")
+    end_idx            = int(data[1]) if len(data) > 1 and len(data[1]) > 0 else None
+    for_local          = (len(data) > 2 and data[2]=="local")
 
     # API KEY や対象のチャンネルIDリストを取得
     conf = load_config()
