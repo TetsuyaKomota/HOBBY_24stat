@@ -193,8 +193,8 @@ def main(event, context):
                 print("download:", SEP.join(["subscriber_count_dir", f"{channel_id}.tsv"]))
 
             # 取得済みの統計情報を取得
-            if os.path.exists(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv")):
-                df = pd.read_csv(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv"), sep="\t")
+            if os.path.exists(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv.gz")):
+                df = pd.read_csv(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv.gz"), sep="\t")
             else:
                 df = pd.DataFrame()
 
@@ -227,9 +227,9 @@ def main(event, context):
                         "comment",
                         ]
                 df = df[cols]
-            df.to_csv(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv"), sep="\t", index=None)
-            blob = bucket.blob(SEP.join(["statistics_dir", f"{channel_id}.tsv"]))
-            blob.upload_from_filename(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv"))
+            df.to_csv(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv.gz"), sep="\t", index=None, compression="gzip")
+            blob = bucket.blob(SEP.join(["statistics_dir", f"{channel_id}.tsv.gz"]))
+            blob.upload_from_filename(os.path.join(tempdir, conf["statistics_dir"], f"{channel_id}.tsv.gz"))
 
             # 登録者数更新
             path = os.path.join(tempdir, conf["subscriber_count_dir"], f"{channel_id}.tsv")
